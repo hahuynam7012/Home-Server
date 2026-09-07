@@ -67,16 +67,6 @@
             margin-bottom: 15px;
             font-weight: bold;
         }
-        .footer-link {
-            text-align: center;
-            font-size: 0.85rem;
-            margin-top: 20px;
-        }
-        .footer-link a {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: bold;
-        }
         .back-home {
             text-align: center;
             margin-top: 10px;
@@ -90,9 +80,9 @@
         <h2>Đăng nhập tài khoản</h2>
         
         {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div class="msg">{{ messages[0] }}</div>
-          {% endif %}
+            {% if messages %}
+                <div class="msg">{{ messages[0] }}</div>
+            {% endif %}
         {% endwith %}
 
         <form method="POST">
