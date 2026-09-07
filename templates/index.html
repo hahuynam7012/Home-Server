@@ -71,11 +71,10 @@
             transform: translateY(-2px);
         }
 
-        /* Màu sắc phân biệt các chức năng */
-        .btn-grid { background-color: #3498db; }       /* Xem bảng grid chung */
-        .btn-profile { background-color: #e67e22; }    /* Trang cá nhân / điền thông tin */
-        .btn-login { background-color: #2ecc71; }      /* Đăng nhập */
-        .btn-logout { background-color: #e74c3c; }     /* Đăng xuất */
+        .btn-grid { background-color: #3498db; }
+        .btn-profile { background-color: #e67e22; }
+        .btn-login { background-color: #2ecc71; }
+        .btn-logout { background-color: #e74c3c; }
     </style>
 </head>
 <body>
@@ -90,16 +89,12 @@
         {% endif %}
 
         <div class="menu-buttons">
-            <!-- Nút vào xem danh sách/grid chung (bạn có thể đổi route nếu tách trang grid riêng, ví dụ /grid) -->
-            <a href="/" class="btn-card btn-grid">📋 Xem Bảng Dữ liệu Chung (Grid)</a>
+            <a href="/grid" class="btn-card btn-grid">📋 Xem Bảng Dữ liệu Chung (Grid)</a>
 
             {% if session.username %}
-                <!-- Nút vào trang cá nhân điền thông tin -->
                 <a href="/profile" class="btn-card btn-profile">👤 Trang cá nhân & Form nhập thông tin</a>
-                <!-- Nút đăng xuất -->
                 <a href="/logout" class="btn-card btn-logout">🚪 Đăng xuất</a>
             {% else %}
-                <!-- Nút đăng nhập -->
                 <a href="/login" class="btn-card btn-login">🔑 Đăng nhập tài khoản</a>
             {% endif %}
         </div>
