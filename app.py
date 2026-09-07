@@ -1,19 +1,29 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
+app.secret_key = 'khoa_bi_mat_cho_session_nay'
 
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
-# Hàm khởi tạo lại dữ liệu mẫu ban đầu cho bảng
 def init_db():
     conn = get_db_connection()
+    
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS Users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
+    
     conn.execute('''
         CREATE TABLE IF NOT EXISTS StudentInfo (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
             StudentName TEXT NOT NULL,
             Gender TEXT NOT NULL,
             StudentBirth TEXT NOT NULL,
@@ -25,18 +35,17 @@ def init_db():
         )
     ''')
     
-    # Kiểm tra nếu bảng trống thì thêm vài dòng dữ liệu mẫu
     cursor = conn.execute('SELECT COUNT(*) FROM StudentInfo')
     count = cursor.fetchone()[0]
     if count == 0:
         sample_data = [
-            ('Nguyễn Văn An', 'Nam', '2004-05-12', 'Hà Nội', 'K22', 'P.101', '0912345678', '2024-09-01'),
-            ('Trần Thị Bình', 'Nữ', '2005-08-20', 'Nam Định', 'K23', 'P.102', '0987654321', '2024-09-05'),
-            ('Lê Hoàng Long', 'Nam', '2004-01-15', 'Thái Bình', 'K22', 'P.103', '0933445566', '2024-08-28')
+            ('admin_an', 'Nguyễn Văn An', 'Nam', '2004-05-12', 'Hà Nội', 'K22', 'P.101', '0912345678', '2024-09-01'),
+            ('admin_binh', 'Trần Thị Bình', 'Nữ', '2005-08-20', 'Nam Định', 'K23', 'P.102', '0987654321', '2024-09-05'),
+            ('admin_long', 'Lê Hoàng Long', 'Nam', '2004-01-15', 'Thái Bình', 'K22', 'P.103', '0933445566', '2024-08-28')
         ]
         conn.executemany('''
-            INSERT INTO StudentInfo (StudentName, Gender, StudentBirth, StudentHomeTown, StudentAcademicYear, StudentRoomNumber, PhoneNumber, CheckInDate)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO StudentInfo (username, StudentName, Gender, StudentBirth, StudentHomeTown, StudentAcademicYear, StudentRoomNumber, PhoneNumber, CheckInDate)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', sample_data)
         conn.commit()
     conn.close()
@@ -47,7 +56,6 @@ def index():
     conn = get_db_connection()
     
     if search_query:
-        # Tìm kiếm theo Tên, Phòng hoặc Quê quán
         query = '''
             SELECT * FROM StudentInfo 
             WHERE StudentName LIKE ? OR StudentRoomNumber LIKE ? OR StudentHomeTown LIKE ?
@@ -60,18 +68,101 @@ def index():
     conn.close()
     return render_template('index.html', data=data, search_query=search_query)
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM Users WHERE username = ? AND password = ?', (username, password)).fetchone()
+        conn.close()
+        
+        if user:
+            session['username'] = username
+            return redirect(url_for('profile'))
+        else:
+            flash('Sai tên đăng nhập hoặc mật khẩu!')
+            
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        try:
+            conn = get_db_connection()
+            conn.execute('INSERT INTO Users (username, password) VALUES (?, ?)', (username, password))
+            conn.commit()
+            conn.close()
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('Tên đăng nhập đã tồn tại!')
+            
+    return render_template('register.html')
+
+# Đăng xuất tài khoản
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('index'))
+
+# Trang cá nhân: Form điền thông tin tự động cập nhật vào bảng chung
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
+    current_user = session['username']
+    conn = get_db_connection()
+    
+    if request.method == 'POST':
+        name = request.form['StudentName']
+        gender = request.form['Gender']
+        birth = request.form['StudentBirth']
+        hometown = request.form['StudentHomeTown']
+        academic_year = request.form['StudentAcademicYear']
+        room = request.form['StudentRoomNumber']
+        phone = request.form['PhoneNumber']
+        checkin = request.form['CheckInDate']
+        
+        existing = conn.execute('SELECT * FROM StudentInfo WHERE username = ?', (current_user,)).fetchone()
+        
+        if existing:
+            conn.execute('''
+                UPDATE StudentInfo 
+                SET StudentName = ?, Gender = ?, StudentBirth = ?, StudentHomeTown = ?, 
+                    StudentAcademicYear = ?, StudentRoomNumber = ?, PhoneNumber = ?, CheckInDate = ?
+                WHERE username = ?
+            ''', (name, gender, birth, hometown, academic_year, room, phone, checkin, current_user))
+        else:
+            conn.execute('''
+                INSERT INTO StudentInfo (username, StudentName, Gender, StudentBirth, StudentHomeTown, StudentAcademicYear, StudentRoomNumber, PhoneNumber, CheckInDate)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (current_user, name, gender, birth, hometown, academic_year, room, phone, checkin))
+            
+        conn.commit()
+        conn.close()
+        return redirect(url_for('index'))
+        
+    student_data = conn.execute('SELECT * FROM StudentInfo WHERE username = ?', (current_user,)).fetchone()
+    conn.close()
+    
+    return render_template('profile.html', student=student_data)
+
 @app.route('/reset-table', methods=['POST'])
 def reset_table():
     conn = get_db_connection()
-    # Xóa sạch bảng cũ và tạo lại dữ liệu mẫu mới
     conn.execute('DROP TABLE IF EXISTS StudentInfo')
+    conn.execute('DROP TABLE IF EXISTS Users')
     conn.commit()
     conn.close()
     
-    init_db()  # Khởi tạo lại bảng và dữ liệu mẫu
+    init_db()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
     init_db()
-    # Chạy server lắng nghe trên toàn mạng nội bộ (truy cập qua IP máy)
     app.run(host='0.0.0.0', port=5000, debug=True)
