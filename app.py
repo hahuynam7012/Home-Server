@@ -7,6 +7,7 @@ app.secret_key = 'khoa_bi_mat_cho_session_nay'
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
+    conn.execute('PRAGMA foreign_keys = ON')
     return conn
 
 def init_db():
@@ -23,7 +24,7 @@ def init_db():
     conn.execute('''
         CREATE TABLE IF NOT EXISTS StudentInfo (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
+            username TEXT UNIQUE,
             StudentName TEXT NOT NULL,
             Gender TEXT NOT NULL,
             StudentBirth TEXT NOT NULL,
@@ -31,33 +32,11 @@ def init_db():
             StudentAcademicYear TEXT NOT NULL,
             StudentRoomNumber TEXT NOT NULL,
             PhoneNumber TEXT NOT NULL,
-            CheckInDate TEXT NOT NULL
+            CheckInDate TEXT NOT NULL,
+            FOREIGN KEY (username) REFERENCES Users(username) ON DELETE CASCADE
         )
     ''')
     
-    cursor_user = conn.execute('SELECT COUNT(*) FROM Users')
-    if cursor_user.fetchone()[0] == 0:
-        sample_users = [
-            ('admin_an', '123456'),
-            ('admin_binh', '123456'),
-            ('admin_long', '123456')
-        ]
-        conn.executemany('INSERT INTO Users (username, password) VALUES (?, ?)', sample_users)
-        conn.commit()
-
-    cursor_student = conn.execute('SELECT COUNT(*) FROM StudentInfo')
-    if cursor_student.fetchone()[0] == 0:
-        sample_data = [
-            ('admin_an', 'Nguyễn Văn An', 'Nam', '2004-05-12', 'Hà Nội', 'K22', 'P.101', '0912345678', '2024-09-01'),
-            ('admin_binh', 'Trần Thị Bình', 'Nữ', '2005-08-20', 'Nam Định', 'K23', 'P.102', '0987654321', '2024-09-05'),
-            ('admin_long', 'Lê Hoàng Long', 'Nam', '2004-01-15', 'Thái Bình', 'K22', 'P.103', '0933445566', '2024-08-28')
-        ]
-        conn.executemany('''
-            INSERT INTO StudentInfo (username, StudentName, Gender, StudentBirth, StudentHomeTown, StudentAcademicYear, StudentRoomNumber, PhoneNumber, CheckInDate)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', sample_data)
-        conn.commit()
-        
     conn.close()
 
 @app.route('/')
