@@ -1,11 +1,15 @@
+import os
 import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
 app.secret_key = 'khoa_bi_mat_cho_session_nay'
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'database.db')
+
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute('PRAGMA foreign_keys = ON')
     return conn
@@ -37,6 +41,7 @@ def init_db():
         )
     ''')
     
+    conn.commit()
     conn.close()
 
 @app.route('/')
