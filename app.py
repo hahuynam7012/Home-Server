@@ -12,7 +12,6 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     
-    # Tạo bảng Users
     conn.execute('''
         CREATE TABLE IF NOT EXISTS Users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +20,6 @@ def init_db():
         )
     ''')
     
-    # Tạo bảng StudentInfo
     conn.execute('''
         CREATE TABLE IF NOT EXISTS StudentInfo (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +35,6 @@ def init_db():
         )
     ''')
     
-    # Seed dữ liệu mẫu cho bảng Users nếu chưa có
     cursor_user = conn.execute('SELECT COUNT(*) FROM Users')
     if cursor_user.fetchone()[0] == 0:
         sample_users = [
@@ -48,7 +45,6 @@ def init_db():
         conn.executemany('INSERT INTO Users (username, password) VALUES (?, ?)', sample_users)
         conn.commit()
 
-    # Seed dữ liệu mẫu cho StudentInfo nếu chưa có
     cursor_student = conn.execute('SELECT COUNT(*) FROM StudentInfo')
     if cursor_student.fetchone()[0] == 0:
         sample_data = [
@@ -64,12 +60,10 @@ def init_db():
         
     conn.close()
 
-# Trang chủ: Chỉ hiển thị các nút chức năng lớn
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Trang xem bảng dữ liệu Grid chung
 @app.route('/grid')
 def grid():
     search_query = request.args.get('search', '').strip()
@@ -86,7 +80,7 @@ def grid():
         data = conn.execute('SELECT * FROM StudentInfo').fetchall()
         
     conn.close()
-    return render_template('grid.html', data=data, search_query=search_query)
+    return render_template('table.html', data=data, search_query=search_query)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -106,13 +100,11 @@ def login():
             
     return render_template('login.html')
 
-# Đăng xuất tài khoản
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-# Trang cá nhân: Form điền thông tin tự động cập nhật vào bảng chung
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
     if 'username' not in session:
