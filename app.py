@@ -12,6 +12,7 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     
+    # Tạo bảng Users
     conn.execute('''
         CREATE TABLE IF NOT EXISTS Users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,6 +21,7 @@ def init_db():
         )
     ''')
     
+    # Tạo bảng StudentInfo
     conn.execute('''
         CREATE TABLE IF NOT EXISTS StudentInfo (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,9 +37,20 @@ def init_db():
         )
     ''')
     
-    cursor = conn.execute('SELECT COUNT(*) FROM StudentInfo')
-    count = cursor.fetchone()[0]
-    if count == 0:
+    # Seed dữ liệu mẫu cho bảng Users nếu chưa có
+    cursor_user = conn.execute('SELECT COUNT(*) FROM Users')
+    if cursor_user.fetchone()[0] == 0:
+        sample_users = [
+            ('admin_an', '123456'),
+            ('admin_binh', '123456'),
+            ('admin_long', '123456')
+        ]
+        conn.executemany('INSERT INTO Users (username, password) VALUES (?, ?)', sample_users)
+        conn.commit()
+
+    # Seed dữ liệu mẫu cho StudentInfo nếu chưa có
+    cursor_student = conn.execute('SELECT COUNT(*) FROM StudentInfo')
+    if cursor_student.fetchone()[0] == 0:
         sample_data = [
             ('admin_an', 'Nguyễn Văn An', 'Nam', '2004-05-12', 'Hà Nội', 'K22', 'P.101', '0912345678', '2024-09-01'),
             ('admin_binh', 'Trần Thị Bình', 'Nữ', '2005-08-20', 'Nam Định', 'K23', 'P.102', '0987654321', '2024-09-05'),
@@ -48,10 +61,17 @@ def init_db():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', sample_data)
         conn.commit()
+        
     conn.close()
 
+# Trang chủ: Chỉ hiển thị các nút chức năng lớn
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+# Trang xem bảng dữ liệu Grid chung
+@app.route('/grid')
+def grid():
     search_query = request.args.get('search', '').strip()
     conn = get_db_connection()
     
@@ -66,7 +86,7 @@ def index():
         data = conn.execute('SELECT * FROM StudentInfo').fetchall()
         
     conn.close()
-    return render_template('index.html', data=data, search_query=search_query)
+    return render_template('grid.html', data=data, search_query=search_query)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -85,23 +105,6 @@ def login():
             flash('Sai tên đăng nhập hoặc mật khẩu!')
             
     return render_template('login.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        try:
-            conn = get_db_connection()
-            conn.execute('INSERT INTO Users (username, password) VALUES (?, ?)', (username, password))
-            conn.commit()
-            conn.close()
-            return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
-            flash('Tên đăng nhập đã tồn tại!')
-            
-    return render_template('register.html')
 
 # Đăng xuất tài khoản
 @app.route('/logout')
@@ -145,7 +148,7 @@ def profile():
             
         conn.commit()
         conn.close()
-        return redirect(url_for('index'))
+        return redirect(url_for('grid'))
         
     student_data = conn.execute('SELECT * FROM StudentInfo WHERE username = ?', (current_user,)).fetchone()
     conn.close()
@@ -161,7 +164,7 @@ def reset_table():
     conn.close()
     
     init_db()
-    return redirect(url_for('index'))
+    return redirect(url_for('grid'))
 
 if __name__ == '__main__':
     init_db()
