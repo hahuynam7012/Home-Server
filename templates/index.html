@@ -3,181 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang thông tin người thuê trọ</title>
+    <title>Hệ thống Quản lý Sinh viên Nhà trọ</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 15px;
             background-color: #f0f0f0;
-            color: #000;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
-        .container {
-            max-width: 1350px;
-            margin: 0 auto;
+        .dashboard-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
         }
 
         h1 {
-            text-align: center;
-            font-size: 1.4rem;
-            margin-bottom: 15px;
-            color: #222;
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 5px;
         }
 
-        .panel {
-            background: #ffffff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .panel-title {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .panel-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .search-form {
-            display: flex;
-            gap: 10px;
-            flex-grow: 1;
-        }
-
-        .search-form input[type="text"] {
-            flex-grow: 1;
-            max-width: 450px;
-            padding: 6px 10px;
+        .subtitle {
             font-size: 0.9rem;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            background: #ffffff;
-            border: 1px solid #ccc;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .grid-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        .grid-table th, .grid-table td {
-            border: 1px solid #d0d0d0;
-            padding: 8px 10px;
-            text-align: left;
-        }
-
-        .grid-table th {
-            background-color: #e1e1e1;
-            color: #111;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        /* Hiệu ứng dòng khi di chuột (giống DataGridView chọn dòng) */
-        .grid-table tbody tr:hover {
-            background-color: #f1f4f8;
-        }
-
-        .btn {
-            padding: 6px 12px;
-            font-size: 0.85rem;
-            border: 1px solid #7f8c8d;
-            border-radius: 3px;
-            cursor: pointer;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .btn-search { background-color: #3498db; color: white; border-color: #2980b9; }
-        .btn-reset { background-color: #95a5a6; color: white; border-color: #7f8c8d; text-decoration: none; display: inline-block; line-height: 1.4; }
-        .btn-reset-table { background-color: #8e44ad; color: white; border-color: #732d91; }
-
-        .btn:hover { opacity: 0.9; }
-
-        .empty-msg {
-            text-align: center;
             color: #666;
-            font-style: italic;
-            padding: 20px;
+            margin-bottom: 25px;
         }
+
+        .user-info {
+            background: #eef2f7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-card {
+            display: block;
+            text-decoration: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            color: white;
+            transition: opacity 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-card:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* Màu sắc phân biệt các chức năng */
+        .btn-grid { background-color: #3498db; }       /* Xem bảng grid chung */
+        .btn-profile { background-color: #e67e22; }    /* Trang cá nhân / điền thông tin */
+        .btn-login { background-color: #2ecc71; }      /* Đăng nhập */
+        .btn-register { background-color: #9b59b6; }   /* Đăng ký */
+        .btn-logout { background-color: #e74c3c; }     /* Đăng xuất */
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Trang thông tin người thuê trọ</h1>
+    <div class="dashboard-container">
+        <h1>Hệ thống Quản lý Nhà trọ</h1>
+        <p class="subtitle">Bảng điều khiển trung tâm</p>
 
-        <!-- Panel tìm kiếm và Reset Table -->
-        <div class="panel">
-            <div class="panel-title">Bộ lọc & Tìm kiếm dữ liệu</div>
-            <div class="panel-actions">
-                <form action="/" method="GET" class="search-form">
-                    <input type="text" name="search" placeholder="Nhập tên, số phòng hoặc quê quán cần tìm..." value="{{ search_query }}">
-                    <button type="submit" class="btn btn-search">Tìm kiếm</button>
-                    {% if search_query %}
-                    <a href="/" class="btn btn-reset">Hủy tìm</a>
-                    {% endif %}
-                </form>
-
-                <form action="/reset-table" method="POST">
-                    <button type="submit" class="btn btn-reset-table">Reset Table</button>
-                </form>
+        {% if session.username %}
+            <div class="user-info">
+                Đang đăng nhập với tài khoản: {{ session.username }}
             </div>
-        </div>
+        {% endif %}
 
-        <!-- Bảng hiển thị dữ liệu dạng DataGridView (Chỉ đọc) -->
-        <div class="table-container">
-            <table class="grid-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Họ tên</th>
-                        <th>Giới tính</th>
-                        <th>Ngày sinh</th>
-                        <th>Quê quán</th>
-                        <th>Khóa</th>
-                        <th>Phòng</th>
-                        <th>SĐT</th>
-                        <th>Ngày vào</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in data %}
-                    <tr>
-                        <td style="text-align: center; font-weight: bold; color: #555;">{{ row.id }}</td>
-                        <td>{{ row.StudentName }}</td>
-                        <td>{{ row.Gender }}</td>
-                        <td>{{ row.StudentBirth }}</td>
-                        <td>{{ row.StudentHomeTown }}</td>
-                        <td>{{ row.StudentAcademicYear }}</td>
-                        <td>{{ row.StudentRoomNumber }}</td>
-                        <td>{{ row.PhoneNumber }}</td>
-                        <td>{{ row.CheckInDate }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="9" class="empty-msg">Không có dữ liệu sinh viên nào trong cơ sở dữ liệu.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="menu-buttons">
+            <!-- Nút vào xem danh sách/grid chung (bạn có thể đổi route nếu tách trang grid riêng, ví dụ /grid) -->
+            <a href="/" class="btn-card btn-grid">📋 Xem Bảng Dữ liệu Chung (Grid)</a>
+
+            {% if session.username %}
+                <!-- Nút vào trang cá nhân điền thông tin -->
+                <a href="/profile" class="btn-card btn-profile">👤 Trang cá nhân & Form nhập thông tin</a>
+                <!-- Nút đăng xuất -->
+                <a href="/logout" class="btn-card btn-logout">🚪 Đăng xuất</a>
+            {% else %}
+                <!-- Nút đăng nhập -->
+                <a href="/login" class="btn-card btn-login">🔑 Đăng nhập tài khoản</a>
+                <!-- Nút đăng ký -->
+                <a href="/register" class="btn-card btn-register">📝 Đăng ký tài khoản mới</a>
+            {% endif %}
         </div>
     </div>
 </body>
